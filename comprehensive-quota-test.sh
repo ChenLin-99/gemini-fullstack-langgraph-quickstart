@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 全面的Gemini API配额测试脚本
-API_KEY="AIzaSyDGFwI5t28VYFDV5KcEudGQhoWTI9acUMc"
+API_KEY="AI"
 PROXY="http://127.0.0.1:7890"
 LOG_FILE="quota_test_$(date +%Y%m%d_%H%M%S).log"
 TEST_DURATION=300  # 5分钟 = 300秒
