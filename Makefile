@@ -12,7 +12,7 @@ dev-frontend:
 
 dev-backend:
 	@echo "Starting backend development server..."
-	@cd backend && langgraph dev
+	@cd backend && source venv/bin/activate && langgraph dev --port 50300
 
 # Run frontend and backend concurrently
 dev:

@@ -121,12 +121,22 @@ def web_research(state: WebSearchState, config: RunnableConfig) -> OverallState:
         },
     )
     # resolve the urls to short urls for saving tokens and time
-    resolved_urls = resolve_urls(
-        response.candidates[0].grounding_metadata.grounding_chunks, state["id"]
-    )
-    # Gets the citations and adds them to the generated text
-    citations = get_citations(response, resolved_urls)
-    modified_text = insert_citation_markers(response.text, citations)
+    grounding_chunks = None
+    if (response.candidates and len(response.candidates) > 0 and 
+        hasattr(response.candidates[0], 'grounding_metadata') and 
+        response.candidates[0].grounding_metadata and
+        hasattr(response.candidates[0].grounding_metadata, 'grounding_chunks')):
+        grounding_chunks = response.candidates[0].grounding_metadata.grounding_chunks
+    
+    if grounding_chunks:
+        resolved_urls = resolve_urls(grounding_chunks, state["id"])
+        # Gets the citations and adds them to the generated text
+        citations = get_citations(response, resolved_urls)
+        modified_text = insert_citation_markers(response.text, citations)
+    else:
+        # No grounding data available, use the response text as is
+        citations = []
+        modified_text = response.text
     sources_gathered = [item for citation in citations for item in citation["segments"]]
 
     return {
@@ -153,7 +163,7 @@ def reflection(state: OverallState, config: RunnableConfig) -> ReflectionState:
     configurable = Configuration.from_runnable_config(config)
     # Increment the research loop count and get the reasoning model
     state["research_loop_count"] = state.get("research_loop_count", 0) + 1
-    reasoning_model = state.get("reasoning_model") or configurable.reasoning_model
+    reasoning_model = state.get("reasoning_model") or configurable.reflection_model
 
     # Format the prompt
     current_date = get_current_date()
@@ -231,7 +241,7 @@ def finalize_answer(state: OverallState, config: RunnableConfig):
         Dictionary with state update, including running_summary key containing the formatted final summary with sources
     """
     configurable = Configuration.from_runnable_config(config)
-    reasoning_model = state.get("reasoning_model") or configurable.reasoning_model
+    reasoning_model = state.get("reasoning_model") or configurable.answer_model
 
     # Format the prompt
     current_date = get_current_date()
